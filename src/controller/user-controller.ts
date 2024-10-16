@@ -23,7 +23,6 @@ export class UserController {
   }
 
   async  createUser(req: CustomRequest<LoginData>, res: Response) {
-    console.log('req.body', req.body);
     const {name, password} = req.body;
     if (!name || !password) {
       res.sendStatus(404);
@@ -36,7 +35,6 @@ export class UserController {
       return;
     }
     const newUser = await UserModel.create({name, password})
-    console.log('newUser', newUser);
     res.json(newUser);
   }
 
