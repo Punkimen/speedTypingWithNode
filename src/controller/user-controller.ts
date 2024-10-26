@@ -1,54 +1,36 @@
-import {Request, Response} from 'express';
+import {NextFunction, Request, Response} from 'express';
 import {UserModel} from "../db/user-scheme";
-
-interface CustomRequest<T = {}> extends Request {
-  body: T
-}
-
-interface LoginData {
-  name: string;
-  password: string;
-}
+import {CreateUser} from "../models/users.modesl";
+import {CustomRequest} from "../models/request.models";
+import UserServices from "../services/user-services";
 
 export class UserController {
-  async getUser(req: Request, res: Response) {
-    const {id} = req.query
-    if (id) {
-      const testUsers = await UserModel.findOne({_id: id});
-      res.json(testUsers);
-      return;
+  async getUser(req: Request, res: Response, next: NextFunction) {
+    const id = req.query.id as string
+    try{
+      const result = await UserServices.getUser(id);
+      res.json(result);
+    }catch (e) {
+      next(e)
     }
-    const users = await UserModel.find();
-    res.json(users);
   }
 
-  async  createUser(req: CustomRequest<LoginData>, res: Response) {
-    const {name, password} = req.body;
-    if (!name || !password) {
-      res.sendStatus(404);
-      return;
+  async  createUser(req: CustomRequest<CreateUser>, res: Response, next: NextFunction) {
+    try{
+      const result = await UserServices.createUser(req.body)
+      res.json(result);
+    }catch (e) {
+      next(e)
     }
-    const isNameBusy = await UserModel.findOne({name});
-    if (isNameBusy) {
-      console.log('isNameBusy', isNameBusy)
-      res.send('Name is busy');
-      return;
-    }
-    const newUser = await UserModel.create({name, password})
-    res.json(newUser);
   }
 
-  async deleteUser(req: Request, res: Response) {
-    const {id} = req.body;
-    if (!id) {
-      res.sendStatus(404);
-      return;
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
+    const id = req.body.id as string;
+    try {
+      const result = await UserServices.deleteUser(id);
+      res.json(result)
+    }catch (e) {
+      next(e)
     }
-    const deletedUser = await UserModel.deleteOne({_id: id});
-    if (!deletedUser) {
-      res.sendStatus(404);
-      return;
-    }
-    res.json(deletedUser);
   }
 }

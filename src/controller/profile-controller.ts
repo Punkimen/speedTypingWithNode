@@ -1,18 +1,14 @@
-import {Request, Response} from 'express';
-import mongoose from "mongoose";
-import {StatsModel} from "../db/statistic-scheme";
+import {NextFunction, Request, Response} from 'express';
+import ProfileServices from "../services/profile-services";
 
 export class ProfileController {
-  async getStats(req: Request, res: Response){
-
-    console.log('new mongoose.Types.ObjectId(USER_ID)', new mongoose.Types.ObjectId(process.env.USER_ID))
-    const stats = await StatsModel.findOne({user_id: '6702c988b0a4a20fdce6a53a'});
-    console.log('stats', stats);
-    if(!stats){
-      res.sendStatus(404);
-      return;
+  async getStats(req: Request, res: Response, next: NextFunction) {
+    const authToken = req.headers.authorization?.split(' ')[1]
+    try {
+      const result = await ProfileServices.getStats(authToken);
+      res.json(result);
+    }catch (e) {
+      next(e);
     }
-    res.json(stats);
-
   }
 }

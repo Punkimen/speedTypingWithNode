@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import cookieParser from "cookie-parser";
 import cors from 'cors';
 import authRoutes from "./routes/auth-route";
+import {errorsMiddleware} from "./middlewares/errors-middleware";
 
 dotenv.config({ path: '.env.local' });
 
@@ -25,6 +26,10 @@ app.use('/', userRoutes)
 app.use('/profile', profileRoutes)
 app.use('/lessons', lessonsRoutes)
 app.use('/auth', authRoutes)
+//@ts-ignore
+app.use(errorsMiddleware);
+
+
 
 app.listen(port, async () => {
   await connect();

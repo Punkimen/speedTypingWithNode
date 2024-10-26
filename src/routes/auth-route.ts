@@ -9,6 +9,7 @@ router.get('/activate/:link',authController.getActivatedLink)
 router.get('/refresh', authController.getRefreshToken)
 router.post('/registration', authController.registration)
 router.post('/login', authController.login)
-router.post('/logout', authController.logout)
+router.get('/logout', authController.logout)
+router.get('/verify', authController.verify)
 
 export default router;
