@@ -1,6 +1,5 @@
 import {NextFunction, Request, Response} from 'express';
-import {UserModel} from "../db/user-scheme";
-import {CreateUser} from "../models/users.modesl";
+import {UserData} from "../models/users.modesl";
 import {CustomRequest} from "../models/request.models";
 import UserServices from "../services/user-services";
 
@@ -15,7 +14,7 @@ export class UserController {
     }
   }
 
-  async  createUser(req: CustomRequest<CreateUser>, res: Response, next: NextFunction) {
+  async  createUser(req: CustomRequest<UserData>, res: Response, next: NextFunction) {
     try{
       const result = await UserServices.createUser(req.body)
       res.json(result);

@@ -1,6 +1,6 @@
 import {UserModel} from "../db/user-scheme";
 import {ApiError} from "../exeptions/api-errors";
-import {CreateUser} from "../models/users.modesl";
+import {UserData} from "../models/users.modesl";
 
 class UserServices {
   async getUser(id?: string) {
@@ -19,7 +19,7 @@ class UserServices {
     }
   }
 
-  async createUser(data: CreateUser) {
+  async createUser(data: UserData) {
     const {email, password} = data;
     if(!email || !password){
       throw ApiError.BadRequest('Не передан email или пароль')

@@ -3,15 +3,14 @@ import {UserModel} from "../db/user-scheme";
 import {tokenServices} from "../services/token.services";
 import bcrypt from 'bcrypt';
 import {Error} from "mongoose";
+import {UserData} from "../models/users.modesl";
+import AuthServices from "../services/auth-services";
 
 interface CustomRequest<T = {}> extends Request {
   body: T
 }
 
-interface LoginData {
-  email: string;
-  password: string;
-}
+
 
 export class AuthController {
   async getActivatedLink(req: Request, res: Response) {
@@ -20,79 +19,38 @@ export class AuthController {
   async getRefreshToken(req: Request, res: Response) {
   }
 
-  async registration(req: CustomRequest<LoginData>, res: Response) {
-    const {email, password} = req.body;
-    if (!email || !password) {
-      res.sendStatus(404);
-      return;
+  async registration(req: CustomRequest<UserData>, res: Response, next: NextFunction) {
+    try {
+      const {newUser, refreshToken, accessToken} = await AuthServices.registration(req.body)
+      res.cookie('refreshToken', refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true});
+      res.json({accessToken, refreshToken, newUser});
+    }catch (e){
+      next(e)
     }
-    const isNameBusy = await UserModel.findOne({email: email});
-    if (isNameBusy) {
-      res.send('Name is busy');
-      return;
-    }
-
-    const hashPassword = await bcrypt.hash(password, 3);
-
-    const newUser = await UserModel.create({email, password: hashPassword});
-    if (!newUser) {
-      res.statusCode = 404;
-      res.send('Error');
-      return;
-    }
-    const tokens = tokenServices.createToken({id: newUser._id});
-    await tokenServices.saveToken(newUser._id, tokens.refreshToken);
-    res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true});
-    res.json({...tokens, newUser});
   }
 
-  async login(req: CustomRequest<LoginData>, res: Response) {
-    const {email, password} = req.body;
-    if (!email || !password) {
-      res.sendStatus(404);
-      return;
+  async login(req: CustomRequest<UserData>, res: Response, next: NextFunction) {
+    try {
+      const {user, refreshToken, accessToken} = await AuthServices.login(req.body);
+      res.cookie('refreshToken', refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true});
+      res.json({refreshToken, accessToken, user});
+    }catch (e) {
+      next(e)
     }
-    const user = await UserModel.findOne({email});
-    if (!user) {
-      res.statusCode = 404;
-      res.send('Неверный логин или пароль')
-      return;
-    }
-    const userHashPass = user.password || '';
-    const isRightPass = await bcrypt.compare(password, userHashPass);
-
-    if (!isRightPass) {
-      res.statusCode = 404;
-      res.send('Неверный логин или пароль')
-      return;
-    }
-
-    const tokens = tokenServices.createToken({id: user._id});
-    await tokenServices.saveToken(user._id, tokens.refreshToken);
-    res.cookie('refreshToken', tokens.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true});
-    res.json({...tokens, user});
-
   }
 
-  async logout(req: Request, res: Response) {
+  async logout(req: Request, res: Response, next: NextFunction) {
     const refreshToken = req.cookies.refreshToken;
-    if(!refreshToken){
-      res.status(401).send('Пользователь не авторизован');
-      return;
-    }
-    try{
-      await tokenServices.deleteToken(refreshToken);
+
+    try {
+      await AuthServices.logout(refreshToken);
       res.clearCookie('refreshToken', {
         httpOnly: true,
       });
-      
       res.send('Вы вышли из аккаунта');
-    }catch (e) {
-      console.log('error', e)
-      //@ts-ignore
-      res.status(500).send(`Ошибка: ${e.message}`)
+    }catch (e){
+      next(e)
     }
-
   }
 
   async verify(req: Request, res: Response, next: NextFunction) {
