@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import {TokenModel} from "../db/token-scheme";
+import {ApiError} from "../exeptions/api-errors";
 
 export interface IPayloadUser {
   id: unknown;
@@ -28,25 +29,24 @@ class TokenServices {
     return tokenData
   }
 
-  async validateToken(token: string, tokenType: 'refresh' | 'access' = 'access'): Promise<IPayloadUser | null> {
+  async validateToken(token?: string, tokenType: 'refresh' | 'access' = 'access'): Promise<IPayloadUser | null> {
+    if (!token) {
+      throw  ApiError.UnauthorizedError();
+    }
+
     const keyVerifyToken = tokenType === 'access' ? process.env.ACCESS_TOKEN_KEY : process.env.REFRESH_TOKEN_KEY;
     if (!keyVerifyToken) {
-      throw new Error('Нет ключа');
-      return null;
+      throw ApiError.BadRequest('Нет ключа');
     }
     try {
-      console.log('token', token, keyVerifyToken)
-      const verify  = await jwt.verify(token, keyVerifyToken);
-      console.log('verify', verify)
+      const verify = await jwt.verify(token, keyVerifyToken);
       if (verify) {
         return verify as IPayloadUser
       } else {
         return null
       }
     } catch (e) {
-      console.log('validateToken error', e);
-      // throw new Error('Нет ключа');
-      return null;
+      throw ApiError.BadRequest('Нет ключа');
     }
   }
 }

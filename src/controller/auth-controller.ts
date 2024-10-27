@@ -1,4 +1,4 @@
-import {Request, Response} from 'express';
+import {NextFunction, Request, Response} from 'express';
 import {UserModel} from "../db/user-scheme";
 import {tokenServices} from "../services/token.services";
 import bcrypt from 'bcrypt';
@@ -95,19 +95,13 @@ export class AuthController {
 
   }
 
-  async verify(req: Request, res: Response) {
+  async verify(req: Request, res: Response, next: NextFunction) {
     const authToken = req.headers.authorization?.split(' ')[1]
-    if (!authToken) {
-      res.status(401).send('Пользователь не авторизован')
-      return;
-    }
     try {
-      const isVerify = await tokenServices.validateToken(authToken);
-      console.log('isVerify', isVerify);
+      await tokenServices.validateToken(authToken);
       res.send('test verify')
     }catch (e) {
-      res.status(401).send('Пользователь не авторизован');
-      return;
+      next(e)
     }
   }
 }

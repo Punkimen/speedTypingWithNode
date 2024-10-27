@@ -1,7 +1,7 @@
 import mongoose, {Schema} from 'mongoose';
 
 const textScheme = new Schema( {
-  _id: Schema.Types.ObjectId,
+  id: String,
   text: String,
 })
 

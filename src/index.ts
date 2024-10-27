@@ -4,10 +4,12 @@ import bodyParser from "body-parser";
 import userRoutes from './routes/user-route';
 import profileRoutes from './routes/profile-route';
 import lessonsRoutes from './routes/lessons-route';
+import exelUploadRoute from "./routes/exel-upload-route";
+import authRoutes from "./routes/auth-route";
+import textRoute from "./routes/text-route";
 import dotenv from 'dotenv';
 import cookieParser from "cookie-parser";
 import cors from 'cors';
-import authRoutes from "./routes/auth-route";
 import {errorsMiddleware} from "./middlewares/errors-middleware";
 
 dotenv.config({ path: '.env.local' });
@@ -23,12 +25,13 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 app.use('/', userRoutes)
+app.use('/', exelUploadRoute)
+app.use('/', textRoute)
 app.use('/profile', profileRoutes)
 app.use('/lessons', lessonsRoutes)
 app.use('/auth', authRoutes)
 //@ts-ignore
 app.use(errorsMiddleware);
-
 
 
 app.listen(port, async () => {
